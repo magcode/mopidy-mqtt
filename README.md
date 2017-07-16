@@ -25,7 +25,7 @@ This is an example how to install on a Raspi:
 
 ```
 cd ~
-git clone 
+git clone https://github.com/magcode/mopidy-mqtt.git
 cd mopidy-mqtt
 sudo python setup.py develop
 ```
