@@ -21,7 +21,7 @@ setup(
     author='magcode',
     author_email='',
     description='Mopidy extension that sends POSTs to Openhab',
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     packages=find_packages(exclude=['tests', 'tests.*']),
     zip_safe=False,
     include_package_data=True,
