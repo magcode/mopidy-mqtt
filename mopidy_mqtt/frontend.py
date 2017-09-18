@@ -47,12 +47,6 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
             logger.info("Subscribed to " + self.topic + "/play")
         self.mqttClient.subscribe(self.topic + "/control")
         logger.info("sub:" + self.topic + "/control")
-
-    def xmqtt_on_message(self, mqttc, obj, msg):
-        logger.info("received play message on " + msg.topic+" "+str(msg.qos)+" "+str(msg.payload))
-        self.core.tracklist.clear()
-        self.core.tracklist.add(None, None, str(msg.payload), None)
-        self.core.playback.play()
         
     def mqtt_on_message(self, mqttc, obj, msg):
         logger.info("received a message on " + msg.topic+" with payload "+str(msg.payload))
