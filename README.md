@@ -18,6 +18,11 @@ You can start playback of a song or stream via MQTT. Send the following:
 
 `mytopic/play -> 'tunein:station:s48720'`
 
+## Stop playback
+You can stop the playback via MQTT. Send the following:
+
+`mytopic/control -> 'stop'`
+
 
 # Installation
 
