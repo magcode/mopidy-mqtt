@@ -66,7 +66,11 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
                 self.core.playback.stop()
 
         if msg.topic == topVolume:
-            logger.info(msg.payload)
+            try:
+                volume=int(msg.payload)
+                self.core.mixer.set_volume(volume)
+            except ValueError:
+                logger.warn("invalid payload for volume: " + msg.payload)
 
     def stream_title_changed(self, title):
         self.MQTTHook.send_title(title)
