@@ -23,6 +23,10 @@ You can stop the playback via MQTT. Send the following:
 
 `mytopic/control -> 'stop'`
 
+## Change volume
+You can change the mixer volume from 0 to 100 via MQTT. Send the following:
+
+`mytopic/volume -> '50'`
 
 # Installation
 
