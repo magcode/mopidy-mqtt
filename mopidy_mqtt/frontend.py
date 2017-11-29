@@ -31,6 +31,8 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         host = self.config['mqtthost']
         port = self.config['mqttport']
         self.topic = self.config['topic']
+        if self.config['username'] and self.config['password']:
+            self.mqttClient.username_pw_set(self.config['username'], password=self.config['password'])
         self.mqttClient.connect_async(host, port, 60)        
         
         self.mqttClient.loop_start()
@@ -64,6 +66,16 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         if msg.topic == topControl:
             if msg.payload == "stop":
                 self.core.playback.stop()
+            elif msg.payload == "pause":
+                self.core.playback.pause()
+            elif msg.payload == "play":
+                self.core.playback.play()
+            elif msg.payload == "resume":
+                self.core.playback.resume()
+            elif msg.payload == "next":
+                self.core.playback.next()
+            elif msg.payload == "previous":
+                self.core.playback.previous()
 
         if msg.topic == topVolume:
             try:
