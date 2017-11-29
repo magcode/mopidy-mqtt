@@ -1,3 +1,0 @@
-[mopidy.ext]
-mqtthook = mopidy_mqtt:Extension
-
