@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 # stdlib imports
 import logging
+import time
 
 from mopidy import core
 
@@ -23,7 +24,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
     def __init__(self, config, core):
         logger.info("mopidy_mqtt initializing ... ")
         self.core = core
-        self.mqttClient = mqtt.Client(client_id="mopidy", clean_session=True)
+        self.mqttClient = mqtt.Client(client_id="mopidy-" + str(int(round(time.time() * 1000))), clean_session=True)
         self.mqttClient.on_message = self.mqtt_on_message
         self.mqttClient.on_connect = self.mqtt_on_connect     
         
