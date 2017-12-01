@@ -25,6 +25,8 @@ class Extension(ext.Extension):
         schema['topic'] = config.String()
         schema['mqtthost'] = config.String()
         schema['mqttport'] = config.Integer()
+        schema['username'] = config.String()
+        schema['password'] = config.String()
         return schema
 
     def setup(self, registry):

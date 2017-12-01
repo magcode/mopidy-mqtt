@@ -46,6 +46,8 @@ Now configure the following file: `/etc/mopidy/mopidy.conf`
 enabled = true
 mqtthost = <mqtt host>
 mqttport = <mqtt port>
+username = <mqtt username> (Optional)
+password = <mqtt password> (Optional)
 topic = <topic, e.g. home/livingroom/music>
 ```
 
