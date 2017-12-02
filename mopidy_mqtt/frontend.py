@@ -17,10 +17,6 @@ logger = logging.getLogger(__name__)
 
 class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
-    def on_stop(self):
-        logger.info("mopidy_mqtt shutting down ... ")
-        self.mqttClient.disconnect()
-        
     def __init__(self, config, core):
         logger.info("mopidy_mqtt initializing ... ")
         self.core = core
@@ -63,8 +59,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
             self.core.tracklist.clear()
             self.core.tracklist.add(None, None, str(msg.payload), None)
             self.core.playback.play()
-            
-        if msg.topic == topControl:
+        elif msg.topic == topControl:
             if msg.payload == "stop":
                 self.core.playback.stop()
             elif msg.payload == "pause":
@@ -77,30 +72,33 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
                 self.core.playback.next()
             elif msg.payload == "previous":
                 self.core.playback.previous()
-
-        if msg.topic == topVolume:
+        elif msg.topic == topVolume:
             try:
                 volume=int(msg.payload)
                 self.core.mixer.set_volume(volume)
             except ValueError:
                 logger.warn("invalid payload for volume: " + msg.payload)
 
+    def on_stop(self):
+        logger.info("mopidy_mqtt shutting down ... ")
+        self.mqttClient.disconnect()
+        
     def stream_title_changed(self, title):
-        self.MQTTHook.send_title(title)
+        self.MQTTHook.publish("/nowplaying", title)
 
     def playback_state_changed(self, old_state, new_state):
-        self.MQTTHook.send_playback_state(new_state)
+        self.MQTTHook.publish("/state", new_state)
         if (new_state == "stopped"):
-            self.MQTTHook.send_title("stopped")
+            self.MQTTHook.publish("/nowplaying", "stopped")
         
     def track_playback_started(self, tl_track):
         track = tl_track.track
         artists = ', '.join(sorted([a.name for a in track.artists]))
-        self.MQTTHook.send_title(artists + ":" + track.name)
+        self.MQTTHook.publish("/nowplaying", artists + ":" + track.name)
         try:
             album = track.album
             albumImage = next(iter(album.images))
-            self.MQTTHook.send_image(albumImage)
+            self.MQTTHook.publish("/image", albumImage)
         except:
             logger.debug("no image")
         
@@ -108,36 +106,14 @@ class MQTTHook():
     def __init__(self, frontend, core, config, client):
         self.config = config['mqtthook']        
         self.mqttclient = client
-        
-    def send_playback_state(self, state):
+       
+    def publish(self, topic, state):
+        full_topic = self.config['topic'] + topic
         try:
-            topic = self.config['topic'] + "/state"
-            rc = self.mqttclient.publish(topic, state)
+            rc = self.mqttclient.publish(full_topic, state)
             if rc[0] == mqtt.MQTT_ERR_NO_CONN:            
                 logger.warn("Error during publish: MQTT_ERR_NO_CONN")
             else:
-                logger.info("Sent " + state + " to " + topic)
+                logger.info("Sent " + state + " to " + full_topic)
         except Exception as e:
-            logger.warning('Unable to send', exc_info=True)
-            
-    def send_title(self, title):
-        try:
-            topic = self.config['topic'] + "/nowplaying"
-            rc = self.mqttclient.publish(topic, title)
-            if rc[0] == mqtt.MQTT_ERR_NO_CONN:            
-                logger.warn("Error during publish: MQTT_ERR_NO_CONN")
-            else:
-                logger.info("Sent " + title + " to " + topic)
-        except Exception as e:
-            logger.warning('Unable to send', exc_info=True)
-
-    def send_image(self, image):
-        try:
-            topic = self.config['topic'] + "/image"
-            rc = self.mqttclient.publish(topic, image)
-            if rc[0] == mqtt.MQTT_ERR_NO_CONN:            
-                logger.warn("Error during publish: MQTT_ERR_NO_CONN")
-            else:
-                logger.info("Sent " + image + " to " + topic)
-        except Exception as e:
-            logger.warning('Unable to send', exc_info=True)
+            logger.error('Unable to send', exc_info=True)
