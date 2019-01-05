@@ -126,8 +126,14 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         
     def track_playback_started(self, tl_track):
         track = tl_track.track
-        artists = ', '.join(sorted([a.name for a in track.artists]))
-        self.MQTTHook.publish("/nowplaying", artists + ":" + track.name)
+        artists="unknown"
+        if (len(track.artists)>0):
+            artists = ', '.join(sorted([a.name for a in track.artists]))
+        if (track.name is None):
+            tn="stream"
+        else:
+            tn=track.name
+        self.MQTTHook.publish("/nowplaying", artists + ":" + tn)
         try:
             album = track.album
             albumImage = next(iter(album.images))
