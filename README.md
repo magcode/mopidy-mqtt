@@ -37,7 +37,10 @@ cd ~
 git clone https://github.com/magcode/mopidy-mqtt.git
 cd mopidy-mqtt
 sudo python setup.py develop
-python setup.py install --user #for local installation
+```
+Alternatively for a local installation you can change the last line to
+```
+python setup.py install --user
 ```
 
 Now configure the following file: `/etc/mopidy/mopidy.conf`
