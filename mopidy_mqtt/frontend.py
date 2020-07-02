@@ -134,12 +134,10 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
             tn=track.name
         tn = tn.rstrip('.mp3')
         self.MQTTHook.publish("/nowplaying", artists + ":" + tn)
-        try:
-            album = track.album
-            albumImage = next(iter(album.images))
-            self.MQTTHook.publish("/image", albumImage)
-        except:
-            logger.debug("no image")
+        imageUri=self.core.library.get_images([track.uri]).get()[track.uri]
+        if (not imageUri is None):
+          logger.info(imageUri[0].uri)
+          self.MQTTHook.publish("/image", imageUri[0].uri)
         
 class MQTTHook():
     def __init__(self, frontend, core, config, client):
