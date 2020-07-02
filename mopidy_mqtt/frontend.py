@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
     def __init__(self, config, core):
-        logger.info("mopidy_mqtt initializing ... ")
+        logger.info("Initializing ... ")
         self.core = core
         self.mqttClient = mqtt.Client(client_id="mopidy-" + str(int(round(time.time() * 1000))), clean_session=True)
         self.mqttClient.on_message = self.mqtt_on_message
@@ -38,16 +38,12 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         
     def mqtt_on_connect(self, client, userdata, flags, rc):
         logger.info("Connected with result code %s" % rc)
-        
-        rc = self.mqttClient.subscribe(self.topic + "/play")
-        if rc[0] != mqtt.MQTT_ERR_SUCCESS:            
-            logger.warn("Error during subscribe: " + str(rc[0]))
-        else:
-            logger.info("Subscribed to " + self.topic + "/play")
-
-        for sub in ["/control","/volume","/info","/search"]:
-            self.mqttClient.subscribe(self.topic+sub)
-            logger.info("sub: \033[1;33m" + self.topic + sub+"\033[0m")
+        for sub in ["/play","/control","/volume","/info","/search"]:
+            rc = self.mqttClient.subscribe(self.topic+sub)
+            if rc[0] != mqtt.MQTT_ERR_SUCCESS:
+                logger.warn("Error during subscribe: " + str(rc[0]))
+            else:              
+                logger.info("Subscribed to " + self.topic + sub)
 
     def mqtt_on_message(self, mqttc, obj, msg):
         logger.info("received a message on " + msg.topic+" with payload "+str(msg.payload))
@@ -59,7 +55,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
         if msg.topic == topPlay:
             self.core.tracklist.clear()
-            self.core.tracklist.add(None, None, str(msg.payload), None)
+            self.core.tracklist.add(uris=[msg.payload.decode()])
             self.core.playback.play()
         elif msg.topic == topControl:
             if msg.payload == "stop":
@@ -117,7 +113,10 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.mqttClient.disconnect()
         
     def stream_title_changed(self, title):
-        self.MQTTHook.publish("/nowplaying", title)
+        logger.info("before" + title)
+        titleStripped = title.rstrip('.mp3')
+        logger.info("after" + titleStripped)
+        self.MQTTHook.publish("/nowplaying", titleStripped)
 
     def playback_state_changed(self, old_state, new_state):
         self.MQTTHook.publish("/state", new_state)
@@ -133,6 +132,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
             tn="stream"
         else:
             tn=track.name
+        tn = tn.rstrip('.mp3')
         self.MQTTHook.publish("/nowplaying", artists + ":" + tn)
         try:
             album = track.album
@@ -153,6 +153,6 @@ class MQTTHook():
             if rc[0] == mqtt.MQTT_ERR_NO_CONN:            
                 logger.warn("Error during publish: MQTT_ERR_NO_CONN")
             else:
-                logger.info("Sent \033[1;32m" + state + "\033[0m to \033[1;32m" + full_topic +"\033[0m")
+                logger.info("Sent " + state + " to " + full_topic)
         except Exception as e:
             logger.error('Unable to send', exc_info=True)
