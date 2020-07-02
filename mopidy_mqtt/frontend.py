@@ -14,6 +14,7 @@ import paho.mqtt.client as mqtt
 import pykka
 
 logger = logging.getLogger(__name__)
+stoppedImage = 'https://raw.githubusercontent.com/pimusicbox/mopidy-musicbox-webclient/develop/mopidy_musicbox_webclient/static/images/default_cover.png'
 
 class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
@@ -46,7 +47,8 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
                 logger.info("Subscribed to " + self.topic + sub)
 
     def mqtt_on_message(self, mqttc, obj, msg):
-        logger.info("received a message on " + msg.topic+" with payload "+str(msg.payload))
+        payload = msg.payload.decode()
+        logger.info("received a message on " + msg.topic+" with payload " + payload)
         topPlay = self.topic + "/play"
         topControl = self.topic + "/control"
         topVolume = self.topic + "/volume"
@@ -55,27 +57,27 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
         if msg.topic == topPlay:
             self.core.tracklist.clear()
-            self.core.tracklist.add(uris=[msg.payload.decode()])
+            self.core.tracklist.add(uris=[payload])
             self.core.playback.play()
         elif msg.topic == topControl:
-            if msg.payload == "stop":
+            if payload == "stop":
                 self.core.playback.stop()
-            elif msg.payload == "pause":
+            elif payload == "pause":
                 self.core.playback.pause()
-            elif msg.payload == "play":
+            elif payload == "play":
                 self.core.playback.play()
-            elif msg.payload == "resume":
+            elif payload == "resume":
                 self.core.playback.resume()
-            elif msg.payload == "next":
+            elif payload == "next":
                 self.core.playback.next()
-            elif msg.payload == "previous":
+            elif payload == "previous":
                 self.core.playback.previous()
-            elif msg.payload == "volplus":
+            elif payload == "volplus":
                 vol=self.core.mixer.get_volume().get()+10
                 if (vol>100):
                     vol=100
                 self.core.mixer.set_volume(vol)
-            elif msg.payload == "volminus":
+            elif payload == "volminus":
                 vol=self.core.mixer.get_volume().get()-10
                 if (vol<0):
                     vol=0
@@ -122,6 +124,8 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.MQTTHook.publish("/state", new_state)
         if (new_state == "stopped"):
             self.MQTTHook.publish("/nowplaying", "stopped")
+            self.MQTTHook.publish("/image", stoppedImage)
+            
         
     def track_playback_started(self, tl_track):
         track = tl_track.track
@@ -136,8 +140,10 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.MQTTHook.publish("/nowplaying", artists + ":" + tn)
         imageUri=self.core.library.get_images([track.uri]).get()[track.uri]
         if (not imageUri is None):
-          logger.info(imageUri[0].uri)
-          self.MQTTHook.publish("/image", imageUri[0].uri)
+          if (imageUri):
+            self.MQTTHook.publish("/image", imageUri[0].uri)
+          else:
+            self.MQTTHook.publish("/image", stoppedImage)
         
 class MQTTHook():
     def __init__(self, frontend, core, config, client):
