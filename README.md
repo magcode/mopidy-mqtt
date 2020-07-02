@@ -36,11 +36,11 @@ This is an example how to install on a Raspi:
 cd ~
 git clone https://github.com/magcode/mopidy-mqtt.git
 cd mopidy-mqtt
-sudo python setup.py develop
+sudo python3 setup.py develop
 ```
 Alternatively for a local installation you can change the last line to
 ```
-python setup.py install --user
+python3 setup.py install --user
 ```
 
 Now configure the following file: `/etc/mopidy/mopidy.conf`
