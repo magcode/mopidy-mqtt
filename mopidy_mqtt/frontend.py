@@ -14,7 +14,6 @@ import paho.mqtt.client as mqtt
 import pykka
 
 logger = logging.getLogger(__name__)
-stoppedImage = 'https://raw.githubusercontent.com/pimusicbox/mopidy-musicbox-webclient/develop/mopidy_musicbox_webclient/static/images/default_cover.png'
 
 class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
 
@@ -28,6 +27,8 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.config = config['mqtthook']
         host = self.config['mqtthost']
         port = self.config['mqttport']
+        self.stoppedImage = self.config['stoppedimage']
+        self.defaultImage = self.config['defaultimage']
         self.topic = self.config['topic']
         if self.config['username'] and self.config['password']:
             self.mqttClient.username_pw_set(self.config['username'], password=self.config['password'])
@@ -124,7 +125,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.MQTTHook.publish("/state", new_state)
         if (new_state == "stopped"):
             self.MQTTHook.publish("/nowplaying", "stopped")
-            self.MQTTHook.publish("/image", stoppedImage)
+            self.MQTTHook.publish("/image", self.stoppedImage)
             
         
     def track_playback_started(self, tl_track):
@@ -139,11 +140,10 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         tn = tn.rstrip('.mp3')
         self.MQTTHook.publish("/nowplaying", artists + ":" + tn)
         imageUri=self.core.library.get_images([track.uri]).get()[track.uri]
-        if (not imageUri is None):
-          if (imageUri):
-            self.MQTTHook.publish("/image", imageUri[0].uri)
-          else:
-            self.MQTTHook.publish("/image", stoppedImage)
+        if (imageUri):
+          self.MQTTHook.publish("/image", imageUri[0].uri)
+        else:
+          self.MQTTHook.publish("/image", self.defaultImage)
         
 class MQTTHook():
     def __init__(self, frontend, core, config, client):
