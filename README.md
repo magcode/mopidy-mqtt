@@ -2,6 +2,7 @@
 
 This Mopidy Frontend Extension allows you to control Mopidy with MQTT and retrieve some information from Mopidy via MQTT.
 The implementation is very basic. Open for any kind of pull requests.
+Tested with Mopidy V3.
 
 ## Status update
 
@@ -12,6 +13,10 @@ Mopidy sends an update as soon the playback state changes:
 When a new title or stream is started Mopidy sends this via `nowplaying`
 
 `mytopic/nowplaying -> 'myradio'`
+
+Also the image url is send:
+
+`mytopic/image -> 'https://i1.sndcdn.com/artworks-kT5TLalLJI36UD05-BMX4rQ-t500x500.jpg'`
 
 ## Play a song or stream
 You can start playback of a song or stream via MQTT. Send the following:
@@ -53,6 +58,8 @@ mqttport = <mqtt port>
 username = <mqtt username> (Optional)
 password = <mqtt password> (Optional)
 topic = <topic, e.g. home/livingroom/music>
+stoppedimage = An image url which will be posted to the 'image' topic in case Mopidy playback is stopped. Use https://mydomain/myimage.png
+defaultimage = An image url which will be posted to the 'image' topic in case there is no other image available. Use https://mydomain/myimage.png
 ```
 
 Restart Mopidy with `sudo service mopidy restart`
