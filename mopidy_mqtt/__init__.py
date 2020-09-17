@@ -20,6 +20,7 @@ class Extension(ext.Extension):
 
     def get_config_schema(self):
         schema = super(Extension, self).get_config_schema()
+        schema['tls'] = config.Boolean()
         schema['topic'] = config.String()
         schema['mqtthost'] = config.String()
         schema['mqttport'] = config.Integer()

@@ -22,14 +22,17 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         self.core = core
         self.mqttClient = mqtt.Client(client_id="mopidy-" + str(int(round(time.time() * 1000))), clean_session=True)
         self.mqttClient.on_message = self.mqtt_on_message
-        self.mqttClient.on_connect = self.mqtt_on_connect     
+        self.mqttClient.on_connect = self.mqtt_on_connect
         
         self.config = config['mqtthook']
         host = self.config['mqtthost']
         port = self.config['mqttport']
+        tls = self.config['tls']
         self.stoppedImage = self.config['stoppedimage']
         self.defaultImage = self.config['defaultimage']
         self.topic = self.config['topic']
+        if tls:
+            self.mqttClient.tls_set()
         if self.config['username'] and self.config['password']:
             self.mqttClient.username_pw_set(self.config['username'], password=self.config['password'])
         self.mqttClient.connect_async(host, port, 60)        
