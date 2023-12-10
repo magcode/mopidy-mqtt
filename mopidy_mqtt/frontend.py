@@ -30,6 +30,7 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         tls = self.config['tls']
         self.stoppedImage = self.config['stoppedimage']
         self.defaultImage = self.config['defaultimage']
+        self.publishBase64Image = self.config['publishbase64image']
         self.topic = self.config['topic']
         if tls:
             self.mqttClient.tls_set()
@@ -145,8 +146,21 @@ class MQTTFrontend(pykka.ThreadingActor, core.CoreListener):
         imageUri=self.core.library.get_images([track.uri]).get()[track.uri]
         if (imageUri):
           self.MQTTHook.publish("/image", imageUri[0].uri)
+          if self.publishBase64Image:
+            self.base64_image_publish(imageUri[0].uri)
         else:
           self.MQTTHook.publish("/image", self.defaultImage)
+
+    def base64_image_publish(self, imageUri):
+        defaultHeaders = {
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36'}
+        response = requests.get(imageUri,headers=defaultHeaders)
+        img = Image.open(BytesIO(response.content))
+        new_image = img.resize((8, 8))
+        temp = BytesIO()
+        new_image.save(temp,format="JPEG")
+        encoded_image = base64.b64encode(temp.getvalue())
+        self.MQTTHook.publish("/imageBase64", encoded_image.decode('ascii'))
         
 class MQTTHook():
     def __init__(self, frontend, core, config, client):

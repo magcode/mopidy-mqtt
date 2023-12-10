@@ -28,6 +28,7 @@ class Extension(ext.Extension):
         schema['password'] = config.String()
         schema['stoppedimage'] = config.String()
         schema['defaultimage'] = config.String()
+        schema['publishbase64image'] = config.Boolean(optional=True)
         return schema
 
     def setup(self, registry):
