@@ -5,6 +5,10 @@ from __future__ import unicode_literals
 # stdlib imports
 import logging
 import time
+import requests
+from PIL import Image
+import base64
+from io import BytesIO
 
 from mopidy import core
 
